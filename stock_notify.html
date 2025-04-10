@@ -2,32 +2,13 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>台股測試通知</title>
+  <title>通知測試</title>
 </head>
 <body>
-  <h2>📢 台股通知測試中...</h2>
-  <p>這是測試版，每 5 分鐘會跳出一次通知，顯示台股最新資訊。</p>
+  <h2>🔔 測試通知啟動中...</h2>
+  <p>這是測試版，每 10 秒會跳出一個通知。</p>
 
 <script>
-async function fetchTAIEX() {
-  const today = new Date().toISOString().split('T')[0];
-  try {
-    const res = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAIEX&start_date=${today}`);
-    const data = await res.json();
-    if (data.data.length === 0) return;
-
-    const open = parseFloat(data.data[0].open);
-    const close = parseFloat(data.data[data.data.length - 1].close);
-    const diff = close - open;
-    const direction = diff >= 0 ? '上漲' : '下跌';
-    const msg = `📈 台股目前：${close.toFixed(2)} 點\n今日${direction} ${Math.abs(diff).toFixed(2)} 點`;
-
-    showNotification(msg);
-  } catch (e) {
-    showNotification('❌ 無法取得台股資料，請稍後再試');
-  }
-}
-
 function showNotification(msg) {
   if (Notification.permission === 'granted') {
     new Notification(msg);
@@ -40,9 +21,15 @@ function showNotification(msg) {
   }
 }
 
-// 每 5 分鐘執行一次
-fetchTAIEX();
-setInterval(fetchTAIEX, 5 * 60 * 1000);
+// 每 10 秒跳一次通知
+setInterval(() => {
+  const now = new Date();
+  const message = `🕒 現在時間：${now.toLocaleTimeString()}`;
+  showNotification(message);
+}, 10000);
+
+// 開啟頁面立即跳一次
+showNotification('✅ 成功啟動通知測試！');
 </script>
 </body>
 </html>
