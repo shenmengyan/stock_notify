@@ -27,4 +27,53 @@ async function checkMarket() {
 
   // 台股加權指數
   try {
-    const taiexRes = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAI_
+    const taiexRes = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAIEX&start_date=${today}`);
+    const taiexData = await taiexRes.json();
+    const data = taiexData.data;
+    if (data.length > 0) {
+      const open = parseFloat(data[0].open);
+      const close = parseFloat(data[data.length - 1].close);
+      const diff = close - open;
+
+      if (Math.abs(diff) > 1000) {
+        notify(`⚠️ 台股今日${diff > 0 ? '上漲' : '下跌'}超過1000點：${diff.toFixed(2)}點`);
+      }
+
+      for (let point of taiexPoints) {
+        if (Math.abs(close - point) < 10) {
+          notify(`🎯 台股接近整數點 ${point}，目前 ${close.toFixed(2)} 點`);
+          break;
+        }
+      }
+    }
+  } catch (e) {
+    console.error('台股資料錯誤', e);
+  }
+
+  // 台積電
+  try {
+    const tsmcRes = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=2330&start_date=${today}`);
+    const tsmcData = await tsmcRes.json();
+    const data = tsmcData.data;
+    if (data.length > 0) {
+      const price = parseFloat(data[data.length - 1].close);
+      for (let point of tsmcPoints) {
+        if (Math.abs(price - point) < 5) {
+          notify(`🐟 台積電股價接近 ${point} 元，目前 ${price.toFixed(2)} 元`);
+          break;
+        }
+      }
+    }
+  } catch (e) {
+    console.error('台積電資料錯誤', e);
+  }
+}
+
+function start() {
+  notify("✅ 通知已啟動，每 5 分鐘檢查一次！");
+  checkMarket();
+  setInterval(checkMarket, 5 * 60 * 1000); // 每 5 分鐘檢查一次
+}
+</script>
+</body>
+</html>
