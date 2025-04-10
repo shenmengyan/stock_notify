@@ -5,7 +5,7 @@
   <title>台股測試通知</title>
 </head>
 <body>
-  <h2>📢 測試版：每分鐘通知一次</h2>
+  <h2>📢 測試版：每分鐘通知一次（含除錯）</h2>
   <button onclick="start()">點擊開始接收通知</button>
 
 <script>
@@ -64,7 +64,11 @@ async function fetchData() {
 
 async function sendSummary() {
   const { taiex, tsmc } = await fetchData();
-  if (!taiex || !tsmc) return;
+
+  if (!taiex || !tsmc) {
+    notify('❌ 資料尚未準備好，跳過這一輪');
+    return;
+  }
 
   if (!openPrices.taiex) openPrices.taiex = taiex.open;
   if (!openPrices.tsmc) openPrices.tsmc = tsmc.open;
@@ -75,20 +79,4 @@ async function sendSummary() {
   const tsmcPercent = getPercentChange(tsmc.close, openPrices.tsmc);
 
   const msg =
-`📈 台股目前：${taiex.close.toFixed(2)} 點
-今日 ${taiexDiff > 0 ? '上漲' : '下跌'} ${Math.abs(taiexDiff).toFixed(2)} 點（${taiexPercent}%）
-
-🐟 台積電目前：${tsmc.close.toFixed(2)} 元
-今日 ${tsmcDiff > 0 ? '上漲' : '下跌'} ${Math.abs(tsmcDiff).toFixed(2)} 元（${tsmcPercent}%）`;
-
-  notify(msg);
-}
-
-function start() {
-  notify("✅ 測試通知已啟動（每分鐘提醒）");
-  sendSummary();
-  setInterval(sendSummary, 60 * 1000); // 每分鐘執行一次
-}
-</script>
-</body>
-</html>
+`📈 台股目前
