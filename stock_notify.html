@@ -2,65 +2,47 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>台股監控通知器</title>
+  <title>台股測試通知</title>
 </head>
 <body>
-  <h2>📢 台股即時監控中...</h2>
-  <p>保持這個頁面開著就可以收到通知。</p>
+  <h2>📢 台股通知測試中...</h2>
+  <p>這是測試版，每 5 分鐘會跳出一次通知，顯示台股最新資訊。</p>
 
 <script>
-const importantPoints = [18000, 19000, 20000, 21000, 22000];
-const tsmcPoints = [800, 900, 1000, 1100, 1200];
-
-async function fetchData() {
+async function fetchTAIEX() {
   const today = new Date().toISOString().split('T')[0];
+  try {
+    const res = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAIEX&start_date=${today}`);
+    const data = await res.json();
+    if (data.data.length === 0) return;
 
-  const indexResp = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAIEX&start_date=${today}`);
-  const indexData = await indexResp.json();
-  const indexList = indexData.data;
-  if (indexList.length === 0) return;
+    const open = parseFloat(data.data[0].open);
+    const close = parseFloat(data.data[data.data.length - 1].close);
+    const diff = close - open;
+    const direction = diff >= 0 ? '上漲' : '下跌';
+    const msg = `📈 台股目前：${close.toFixed(2)} 點\n今日${direction} ${Math.abs(diff).toFixed(2)} 點`;
 
-  const open = parseFloat(indexList[0].open);
-  const close = parseFloat(indexList[indexList.length - 1].close);
-  const diff = close - open;
-
-  if (Math.abs(diff) >= 1000) {
-    notify(`⚠️ 台股今天已經 ${diff > 0 ? '上漲' : '下跌'} 超過 1000 點，目前變動：${diff.toFixed(2)} 點`);
-  }
-
-  for (let point of importantPoints) {
-    if (Math.abs(close - point) <= 10) {
-      notify(`📈 台股目前接近整數點：${point}（現在：${close.toFixed(2)}）`);
-      break;
-    }
-  }
-
-  const tsmcResp = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=2330&start_date=${today}`);
-  const tsmcData = await tsmcResp.json();
-  const tsmcList = tsmcData.data;
-  if (tsmcList.length === 0) return;
-
-  const tsmcClose = parseFloat(tsmcList[tsmcList.length - 1].close);
-  for (let point of tsmcPoints) {
-    if (Math.abs(tsmcClose - point) <= 5) {
-      notify(`💡 台積電股價接近 ${point} 元（現在：${tsmcClose.toFixed(2)} 元）`);
-      break;
-    }
+    showNotification(msg);
+  } catch (e) {
+    showNotification('❌ 無法取得台股資料，請稍後再試');
   }
 }
 
-function notify(msg) {
-  if (Notification.permission === "granted") {
+function showNotification(msg) {
+  if (Notification.permission === 'granted') {
     new Notification(msg);
-  } else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then(p => {
-      if (p === "granted") new Notification(msg);
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        new Notification(msg);
+      }
     });
   }
 }
 
-fetchData();
-setInterval(fetchData, 5 * 60 * 1000);
+// 每 5 分鐘執行一次
+fetchTAIEX();
+setInterval(fetchTAIEX, 5 * 60 * 1000);
 </script>
 </body>
 </html>
