@@ -6,7 +6,8 @@
 </head>
 <body>
   <h2>🔔 測試通知啟動中...</h2>
-  <p>這是測試版，每 10 秒會跳出一個通知。</p>
+  <p>請點下面按鈕來啟動通知功能（這是瀏覽器的限制）</p>
+  <button onclick="startNotifications()">點我開始通知測試</button>
 
 <script>
 function showNotification(msg) {
@@ -21,15 +22,15 @@ function showNotification(msg) {
   }
 }
 
-// 每 10 秒跳一次通知
-setInterval(() => {
-  const now = new Date();
-  const message = `🕒 現在時間：${now.toLocaleTimeString()}`;
-  showNotification(message);
-}, 10000);
+function startNotifications() {
+  showNotification('✅ 通知功能已啟動！');
 
-// 開啟頁面立即跳一次
-showNotification('✅ 成功啟動通知測試！');
+  setInterval(() => {
+    const now = new Date();
+    const message = `🕒 現在時間：${now.toLocaleTimeString()}`;
+    showNotification(message);
+  }, 10000);
+}
 </script>
 </body>
 </html>
