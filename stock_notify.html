@@ -2,17 +2,13 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>台股監控通知器</title>
+  <title>台股測試通知</title>
 </head>
 <body>
-  <h2>📈 台股 & 台積電 即時監控中...</h2>
+  <h2>📢 測試版：每分鐘跳通知中...</h2>
   <button onclick="start()">點擊開始接收通知</button>
 
 <script>
-const taiexPoints = [18000, 19000, 20000, 21000, 22000];
-const tsmcPoints = [800, 900, 1000, 1100, 1200];
-
-// 儲存每日開盤價
 let openPrices = {
   taiex: null,
   tsmc: null
@@ -39,7 +35,7 @@ async function fetchData() {
 
   try {
     const taiexRes = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAIEX&start_date=${today}`);
-    const taiexData = taiexRes.json ? await taiexRes.json() : {};
+    const taiexData = await taiexRes.json();
     const data = taiexData.data || [];
     if (data.length > 0) {
       const open = parseFloat(data[0].open);
@@ -48,12 +44,12 @@ async function fetchData() {
       taiex = { open, close };
     }
   } catch (e) {
-    console.error('取得台股資料失敗', e);
+    console.error('台股資料失敗', e);
   }
 
   try {
     const tsmcRes = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=2330&start_date=${today}`);
-    const tsmcData = tsmcRes.json ? await tsmcRes.json() : {};
+    const tsmcData = await tsmcRes.json();
     const data = tsmcData.data || [];
     if (data.length > 0) {
       const open = parseFloat(data[0].open);
@@ -62,76 +58,34 @@ async function fetchData() {
       tsmc = { open, close };
     }
   } catch (e) {
-    console.error('取得台積電資料失敗', e);
+    console.error('台積電資料失敗', e);
   }
 
   return { taiex, tsmc };
 }
-
-async function checkMarket() {
+async function sendSummary() {
   const { taiex, tsmc } = await fetchData();
   if (!taiex || !tsmc) return;
 
-  // ➤ 原本的條件判斷邏輯
-  const diff = taiex.close - taiex.open;
-  if (Math.abs(diff) > 1000) {
-    notify(`⚠️ 台股今日${diff > 0 ? '上漲' : '下跌'}超過1000點：${diff.toFixed(2)}點`);
-  }
+  const taiexDiff = taiex.close - openPrices.taiex;
+  const taiexPercent = getPercentChange(taiex.close, openPrices.taiex);
+  const tsmcDiff = tsmc.close - openPrices.tsmc;
+  const tsmcPercent = getPercentChange(tsmc.close, openPrices.tsmc);
 
-  for (let point of taiexPoints) {
-    if (Math.abs(taiex.close - point) < 10) {
-      notify(`🎯 台股接近整數點 ${point}，目前 ${taiex.close.toFixed(2)} 點`);
-      break;
-    }
-  }
-
-  for (let point of tsmcPoints) {
-    if (Math.abs(tsmc.close - point) < 5) {
-      notify(`🐟 台積電股價接近 ${point} 元，目前 ${tsmc.close.toFixed(2)} 元`);
-      break;
-    }
-  }
-}
-
-// 每整點或半點發送摘要
-async function checkHalfHourSummary() {
-  const now = new Date();
-  const hour = now.getHours();
-  const minute = now.getMinutes();
-
-  const isMarketTime = hour >= 9 && (hour < 13 || (hour === 13 && minute <= 30));
-  const isHalfOrFull = (minute === 0 || minute === 30);
-
-  if (isMarketTime && isHalfOrFull) {
-    const { taiex, tsmc } = await fetchData();
-    if (!taiex || !tsmc) return;
-
-    const taiexDiff = taiex.close - openPrices.taiex;
-    const taiexPercent = getPercentChange(taiex.close, openPrices.taiex);
-    const tsmcDiff = tsmc.close - openPrices.tsmc;
-    const tsmcPercent = getPercentChange(tsmc.close, openPrices.tsmc);
-
-    const msg =
+  const msg =
 `📈 台股目前：${taiex.close.toFixed(2)} 點
 今日 ${taiexDiff > 0 ? '上漲' : '下跌'} ${Math.abs(taiexDiff).toFixed(2)} 點（${taiexPercent}%）
 
 🐟 台積電目前：${tsmc.close.toFixed(2)} 元
 今日 ${tsmcDiff > 0 ? '上漲' : '下跌'} ${Math.abs(tsmcDiff).toFixed(2)} 元（${tsmcPercent}%）`;
 
-    notify(msg);
-  }
+  notify(msg);
 }
 
 function start() {
-  notify("✅ 通知功能已啟動");
-
-  // 每 5 分鐘檢查重大波動
-  checkMarket();
-  setInterval(checkMarket, 5 * 60 * 1000);
-
-  // 每分鐘檢查一次是否整點或半點
-  checkHalfHourSummary();
-  setInterval(checkHalfHourSummary, 60 * 1000);
+  notify("✅ 每分鐘測試通知啟動中");
+  sendSummary();
+  setInterval(sendSummary, 60 * 1000); // 每 1 分鐘執行一次
 }
 </script>
 </body>
