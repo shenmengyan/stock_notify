@@ -5,7 +5,7 @@
   <title>台股測試通知</title>
 </head>
 <body>
-  <h2>📢 測試版：每分鐘跳通知中...</h2>
+  <h2>📢 測試版：每分鐘通知一次</h2>
   <button onclick="start()">點擊開始接收通知</button>
 
 <script>
@@ -40,7 +40,6 @@ async function fetchData() {
     if (data.length > 0) {
       const open = parseFloat(data[0].open);
       const close = parseFloat(data[data.length - 1].close);
-      if (!openPrices.taiex) openPrices.taiex = open;
       taiex = { open, close };
     }
   } catch (e) {
@@ -54,7 +53,6 @@ async function fetchData() {
     if (data.length > 0) {
       const open = parseFloat(data[0].open);
       const close = parseFloat(data[data.length - 1].close);
-      if (!openPrices.tsmc) openPrices.tsmc = open;
       tsmc = { open, close };
     }
   } catch (e) {
@@ -63,9 +61,13 @@ async function fetchData() {
 
   return { taiex, tsmc };
 }
+
 async function sendSummary() {
   const { taiex, tsmc } = await fetchData();
   if (!taiex || !tsmc) return;
+
+  if (!openPrices.taiex) openPrices.taiex = taiex.open;
+  if (!openPrices.tsmc) openPrices.tsmc = tsmc.open;
 
   const taiexDiff = taiex.close - openPrices.taiex;
   const taiexPercent = getPercentChange(taiex.close, openPrices.taiex);
@@ -83,9 +85,9 @@ async function sendSummary() {
 }
 
 function start() {
-  notify("✅ 每分鐘測試通知啟動中");
+  notify("✅ 測試通知已啟動（每分鐘提醒）");
   sendSummary();
-  setInterval(sendSummary, 60 * 1000); // 每 1 分鐘執行一次
+  setInterval(sendSummary, 60 * 1000); // 每分鐘執行一次
 }
 </script>
 </body>
