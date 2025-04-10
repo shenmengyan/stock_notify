@@ -2,35 +2,29 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>通知測試</title>
+  <title>台股監控通知器</title>
 </head>
 <body>
-  <h2>🔔 測試通知啟動中...</h2>
-  <p>請點下面按鈕來啟動通知功能（這是瀏覽器的限制）</p>
-  <button onclick="startNotifications()">點我開始通知測試</button>
+  <h2>📈 台股 & 台積電 即時監控中...</h2>
+  <button onclick="start()">點擊開始接收通知</button>
 
 <script>
-function showNotification(msg) {
+const taiexPoints = [18000, 19000, 20000, 21000, 22000];
+const tsmcPoints = [800, 900, 1000, 1100, 1200];
+
+function notify(msg) {
   if (Notification.permission === 'granted') {
     new Notification(msg);
-  } else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        new Notification(msg);
-      }
+  } else {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') new Notification(msg);
     });
   }
 }
 
-function startNotifications() {
-  showNotification('✅ 通知功能已啟動！');
+async function checkMarket() {
+  const today = new Date().toISOString().split('T')[0];
 
-  setInterval(() => {
-    const now = new Date();
-    const message = `🕒 現在時間：${now.toLocaleTimeString()}`;
-    showNotification(message);
-  }, 10000);
-}
-</script>
-</body>
-</html>
+  // 台股加權指數
+  try {
+    const taiexRes = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAI_
